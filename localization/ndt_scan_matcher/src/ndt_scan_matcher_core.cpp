@@ -1009,6 +1009,10 @@ geometry_msgs::msg::PoseWithCovarianceStamped NDTScanMatcher::align_pose(
   constexpr int64_t publish_num = 20;
   const int64_t publish_interval = param_.initial_pose_estimation.particles_num / publish_num;
 
+  std::ofstream ofs;
+  ofs.open("/tmp/particle.csv");
+  ofs << "initial_pose.x," << "initial_pose.y," << "initial_pose.yaw," << "ndt_pose.x," << "ndt_pose.y," << "ndt_pose.yaw," << "tp," << "nvtl," << std::endl;
+
   for (int64_t i = 0; i < param_.initial_pose_estimation.particles_num; i++) {
     const TreeStructuredParzenEstimator::Input input = tpe.get_next_input();
 
@@ -1056,6 +1060,9 @@ geometry_msgs::msg::PoseWithCovarianceStamped NDTScanMatcher::align_pose(
       *ndt_ptr_->getInputSource(), *sensor_points_in_map_ptr, ndt_result.pose);
     publish_point_cloud(
       initial_pose_with_cov.header.stamp, param_.frame.map_frame, sensor_points_in_map_ptr);
+
+    // output csv
+    ofs << initial_pose.position.x << "," << initial_pose.position.y << "," << init_rpy.z << "," << pose.position.x << "," << pose.position.y << "," << rpy.z << "," << ndt_result.transform_probability << "," << ndt_result.nearest_voxel_transformation_likelihood << std::endl;
   }
 
   auto best_particle_ptr = std::max_element(
